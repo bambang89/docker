@@ -1,0 +1,55 @@
+version: "3.3"
+services:
+
+  mysql:
+    image: mysql:5.7.20
+    volumes:
+       - ./dbdata:/var/lib/mysql
+    restart: always
+    ports:
+      - 9009:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: niagahoster
+
+  php:
+    build:
+      context: ./php/7.3
+      dockerfile: Dockerfile
+    image: my-app
+    container_name: php
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www/
+    expose:
+        - "9000"
+    volumes:
+      - ./www:/var/www
+    networks:
+      - laravel
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - 8004:80
+    volumes:
+      - ./www:/var/www
+      - ./sites:/etc/nginx/conf.d/
+    networks:
+      - laravel
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    volumes:
+      - ./redis:/data
+    networks:
+      - laravel
+
+networks:
+  laravel:
+    driver: bridge
+  dockernet:
+    external: true
